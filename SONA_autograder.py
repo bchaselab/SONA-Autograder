@@ -14,12 +14,15 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
 
-def main(driver_path='/opt/homebrew/bin/chromedriver'):
+def main(driver_path='/usr/bin/chromedriver'):
     load_dotenv()
     logger.add('SONA.log')
 
     service = Service(driver_path)
     options = webdriver.ChromeOptions()
+    options.add_argument('--start-maximized')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
     options.add_argument('headless')
     driver = webdriver.Chrome(options=options, service=service)
 
@@ -61,7 +64,7 @@ def main(driver_path='/opt/homebrew/bin/chromedriver'):
 
     mail = imaplib.IMAP4_SSL('outlook.office365.com')
     mail.login(os.environ['EMAIL_ADDR'], os.environ['EMAIL_PASSWD'])
-    mail.select("INBOX")
+    mail.select('INBOX')
     _, selected_mails = mail.search(None, '(FROM "noreply@qemailserver.com")')
     email_ids = selected_mails[0].split()
 
