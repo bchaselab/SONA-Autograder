@@ -1,3 +1,3 @@
 # SONA-Autograder
 
-Automatically grades the online system for research opportunities (SONA).
+Automatically grades uncredited timeslots in  the online system for research opportunities (SONA).

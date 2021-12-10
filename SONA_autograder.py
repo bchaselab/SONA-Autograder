@@ -69,7 +69,7 @@ def main(driver_path='/opt/homebrew/bin/chromedriver'):
         _, data = mail.fetch(email_id, '(RFC822)')
         _, bytes_data = data[0]
         email_message = email.message_from_bytes(bytes_data)
-        granted_to = 0
+        granted_to = []
         for part in email_message.walk():
             if part.get_content_type(
             ) == 'text/plain' or part.get_content_type() == 'text/html':
@@ -78,14 +78,20 @@ def main(driver_path='/opt/homebrew/bin/chromedriver'):
                     if participant[0].lower() in body.lower():
                         participant[1].click()
                         logger.info(f'Granting credit to {participant[0]}...')
-                        granted_to += 1
+                        granted_to.append(participant)
     time.sleep(1)
+
+    if set(granted_to) ^ set(participant):
+        not_granted = [x[0] for x in list(set(granted_to) ^ set(participant))]
+        for name in not_granted:
+            logger.warning(f'Skipped granting credit to {name}...')
 
     for e in driver.find_elements(By.TAG_NAME, 'input'):
         if e.get_attribute('type') == 'submit':
             e.click()
             logger.info(
-                f'Finished! Granted credits to {granted_to} participant(s).')
+                f'Finished! Granted credits to {len(granted_to)} participant(s).'
+            )
             break
 
     driver.quit()
