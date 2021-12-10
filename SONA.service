@@ -1,0 +1,13 @@
+[Unit]
+Description=SONA Autograder
+Requires=network.target
+
+[Service]
+Type=idle
+User=root
+WorkingDirectory=/home/pi/SONA-Autograder
+ExecStart=/root/.pyenv/versions/py3.10/bin/python SONA_autograder.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

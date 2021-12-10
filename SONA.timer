@@ -1,0 +1,10 @@
+[Unit]
+Description=Run SONA.service everyday
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+Unit=SONA.service
+
+[Install]
+WantedBy=timers.target
