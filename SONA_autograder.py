@@ -68,7 +68,7 @@ def main(driver_path='/usr/bin/chromedriver'):
     _, selected_mails = mail.search(None, '(FROM "noreply@qemailserver.com")')
     email_ids = selected_mails[0].split()
 
-    for email_id in email_ids[(len(participants) + 10) * -1:]:
+    for email_id in email_ids[(len(participants) + 100) * -1:]:
         _, data = mail.fetch(email_id, '(RFC822)')
         _, bytes_data = data[0]
         email_message = email.message_from_bytes(bytes_data)
@@ -83,11 +83,6 @@ def main(driver_path='/usr/bin/chromedriver'):
                         logger.info(f'Granting credit to {participant[0]}...')
                         granted_to.append(participant)
     time.sleep(1)
-
-    if set(granted_to) ^ set(participant):
-        not_granted = [x[0] for x in list(set(granted_to) ^ set(participant))]
-        for name in not_granted:
-            logger.warning(f'Skipped granting credit to {name}...')
 
     for e in driver.find_elements(By.TAG_NAME, 'input'):
         if e.get_attribute('type') == 'submit':
