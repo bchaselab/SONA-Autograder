@@ -5,7 +5,9 @@ import email
 import imaplib
 import os
 import time
+from pathlib import Path
 
+import cronitor
 from dotenv import load_dotenv
 from loguru import logger
 from selenium import webdriver
@@ -15,8 +17,7 @@ from selenium.webdriver.common.keys import Keys
 
 
 def main(driver_path='/usr/bin/chromedriver'):
-    load_dotenv()
-    logger.add('SONA.log')
+    monitor.ping(state='run', message='Started')
 
     service = Service(driver_path)
     options = webdriver.ChromeOptions()
@@ -67,33 +68,49 @@ def main(driver_path='/usr/bin/chromedriver'):
     mail.select('INBOX')
     _, selected_mails = mail.search(None, '(FROM "noreply@qemailserver.com")')
     email_ids = selected_mails[0].split()
+    granted_to = []
 
     for email_id in email_ids[(len(participants) + 100) * -1:]:
         _, data = mail.fetch(email_id, '(RFC822)')
         _, bytes_data = data[0]
         email_message = email.message_from_bytes(bytes_data)
-        granted_to = []
         for part in email_message.walk():
             if part.get_content_type(
             ) == 'text/plain' or part.get_content_type() == 'text/html':
                 body = part.get_payload(decode=True).decode()
                 for participant in participants:
-                    if participant[0].lower() in body.lower():
+                    if participant[0].lower() in body.lower(
+                    ) and participant not in granted_to:
                         participant[1].click()
                         logger.info(f'Granting credit to {participant[0]}...')
+                        monitor.ping(
+                            state='ok',
+                            message=f'Granting credit to {participant[0]}...')
                         granted_to.append(participant)
+
+    for participant in participants:
+        if participant not in granted_to:
+            logger.info(f'Skipped {participant[0]}...')
+
     time.sleep(1)
 
     for e in driver.find_elements(By.TAG_NAME, 'input'):
         if e.get_attribute('type') == 'submit':
             e.click()
-            logger.info(
-                f'Finished! Granted credits to {len(granted_to)} participant(s).'
-            )
             break
 
     driver.quit()
+    logger.info(
+        f'Finished! Granted credits to {len(granted_to)} participant(s).')
+    monitor.ping(
+        state='complete',
+        message=
+        f'Finished! Granted credits to {len(granted_to)} participant(s).')
 
 
 if __name__ == '__main__':
+    load_dotenv()
+    logger.add(f'{Path(__file__).parent}/logs.log')
+    cronitor.api_key = os.environ['CRONITOR_API_KEY']
+    monitor = cronitor.Monitor('SONA-autograder')
     main()
